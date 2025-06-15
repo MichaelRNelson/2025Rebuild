@@ -1,0 +1,59 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 5.79515625,
+        "y": 3.8726562499999995
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 6.793593749999999,
+        "y": 1.4090624999999997
+      },
+      "isLocked": false,
+      "linkedName": "3A"
+    },
+    {
+      "anchor": {
+        "x": 1.43203125,
+        "y": 5.53015625
+      },
+      "prevControl": {
+        "x": 1.9378124999999988,
+        "y": 1.496093750000007
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "P3"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.8300198807157055,
+      "rotationDegrees": -57.572
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 6.0,
+    "maxAcceleration": 2.5,
+    "maxAngularVelocity": 180.0,
+    "maxAngularAcceleration": 180.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -57.572
+  },
+  "reversed": false,
+  "folder": "3ATo",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "useDefaultConstraints": true
+}
