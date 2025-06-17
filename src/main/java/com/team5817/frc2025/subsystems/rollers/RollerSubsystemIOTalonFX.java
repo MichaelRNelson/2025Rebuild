@@ -7,7 +7,6 @@
 
 package com.team5817.frc2025.subsystems.rollers;
 
-
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
@@ -29,8 +28,11 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 
-/** Generic roller IO implementation for a roller or series of rollers using a Kraken. */
-public class RollerSystemIOTalonFX implements RollerSystemIO {
+/**
+ * Generic roller IO implementation for a roller or series of rollers using a
+ * Kraken.
+ */
+public class RollerSubsystemIOTalonFX implements RollerSubsystemIO {
   private final TalonFX mMain;
 
   private final StatusSignal<Angle> position;
@@ -43,14 +45,15 @@ public class RollerSystemIOTalonFX implements RollerSystemIO {
 
   // Single shot for voltage mode, robot loop will call continuously
   private final VoltageOut voltageOut = new VoltageOut(0.0).withUpdateFreqHz(0);
-  private final MotionMagicVelocityTorqueCurrentFOC velocityOut = new MotionMagicVelocityTorqueCurrentFOC(0).withUpdateFreqHz(0).withSlot(0);
+  private final MotionMagicVelocityTorqueCurrentFOC velocityOut = new MotionMagicVelocityTorqueCurrentFOC(0)
+      .withUpdateFreqHz(0).withSlot(0);
   private final TorqueCurrentFOC torqueCurrentOut = new TorqueCurrentFOC(0.0).withUpdateFreqHz(0);
 
   private final TalonFXConfiguration config;
   private final double reduction;
 
-  public RollerSystemIOTalonFX(
-      CanDeviceId id, TalonFXRollerConstants mConstants, double reduction) {
+  public RollerSubsystemIOTalonFX(
+      CanDeviceId id, RollerConstantsTalonFX mConstants, double reduction) {
     this.reduction = reduction;
     mMain = new TalonFX(id.getDeviceNumber(), id.getBus());
 
@@ -102,16 +105,15 @@ public class RollerSystemIOTalonFX implements RollerSystemIO {
 
     PhoenixUtil.tryUntilOk(
         5,
-        () ->
-            BaseStatusSignal.setUpdateFrequencyForAll(
-                50.0,
-                position,
-                velocity,
-                appliedVoltage,
-                supplyCurrent,
-                torqueCurrent,
-                tempCelsius,
-                tempFault));
+        () -> BaseStatusSignal.setUpdateFrequencyForAll(
+            50.0,
+            position,
+            velocity,
+            appliedVoltage,
+            supplyCurrent,
+            torqueCurrent,
+            tempCelsius,
+            tempFault));
     PhoenixUtil.tryUntilOk(5, () -> mMain.optimizeBusUtilization(0, 1.0));
 
     // Register signals for refresh
@@ -127,24 +129,23 @@ public class RollerSystemIOTalonFX implements RollerSystemIO {
   }
 
   @Override
-  public void updateInputs(RollerSystemIOInputs inputs) {
-    inputs.data =
-        new RollerSystemIOData(
-            Units.rotationsToRadians(position.getValueAsDouble()) / reduction,
-            Units.rotationsToRadians(velocity.getValueAsDouble()) / reduction,
-            appliedVoltage.getValueAsDouble(),
-            supplyCurrent.getValueAsDouble(),
-            torqueCurrent.getValueAsDouble(),
-            tempCelsius.getValueAsDouble(),
-            tempFault.getValue(),
-            BaseStatusSignal.isAllGood(
-                position,
-                velocity,
-                appliedVoltage,
-                supplyCurrent,
-                torqueCurrent,
-                tempCelsius,
-                tempFault));
+  public void updateInputs(RollerSubsystemIOInputs inputs) {
+    inputs.data = new RollerSubsystemIOData(
+        Units.rotationsToRadians(position.getValueAsDouble()) / reduction,
+        Units.rotationsToRadians(velocity.getValueAsDouble()) / reduction,
+        appliedVoltage.getValueAsDouble(),
+        supplyCurrent.getValueAsDouble(),
+        torqueCurrent.getValueAsDouble(),
+        tempCelsius.getValueAsDouble(),
+        tempFault.getValue(),
+        BaseStatusSignal.isAllGood(
+            position,
+            velocity,
+            appliedVoltage,
+            supplyCurrent,
+            torqueCurrent,
+            tempCelsius,
+            tempFault));
   }
 
   @Override
@@ -156,7 +157,7 @@ public class RollerSystemIOTalonFX implements RollerSystemIO {
   public void runTorqueCurrent(double amps) {
     mMain.setControl(torqueCurrentOut.withOutput(amps));
   }
-  
+
   @Override
   public void runVelocity(double velocity) {
     mMain.setControl(velocityOut.withVelocity(velocity));

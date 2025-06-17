@@ -92,14 +92,6 @@ public class Drive extends Subsystem {
   private SwerveKinematicLimits mUncappedKinematicLimits = SwerveConstants.kSwerveUncappedKinematicLimits;
 
   private static AlignmentType mAlignment = AlignmentType.CORAL_SCORE;
-  private static Drive mInstance;
-
-  public static Drive getInstance() {
-    if (mInstance == null) {
-      mInstance = new Drive();
-    }
-    return mInstance;
-  }
 
   public static final DriveTrainSimulationConfig mapleSimConfig = DriveTrainSimulationConfig.Default()
       .withRobotMass(Pound.of(115))
@@ -122,7 +114,7 @@ public class Drive extends Subsystem {
     driveSimulation = sim;
   }
 
-  private Drive() {
+  public Drive() {
     mModules = new SwerveModule[] {
         new SwerveModule(
             0, Mod0.SwerveModuleConstants(), Cancoders.getInstance().getFrontLeft()),

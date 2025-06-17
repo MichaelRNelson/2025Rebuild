@@ -15,34 +15,32 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
-public class RollerSystemIOSim implements RollerSystemIO {
+public class RollerSubsystemIOSim implements RollerSubsystemIO {
   private final DCMotorSim sim;
   private final DCMotor gearbox;
   private double appliedVoltage = 0.0;
 
-  public RollerSystemIOSim(DCMotor motorModel, double reduction, double moi) {
+  public RollerSubsystemIOSim(DCMotor motorModel, double reduction, double moi) {
     gearbox = motorModel;
-    sim =
-        new DCMotorSim(LinearSystemId.createDCMotorSystem(motorModel, moi, reduction), motorModel);
+    sim = new DCMotorSim(LinearSystemId.createDCMotorSystem(motorModel, moi, reduction), motorModel);
   }
 
   @Override
-  public void updateInputs(RollerSystemIOInputs inputs) {
+  public void updateInputs(RollerSubsystemIOInputs inputs) {
     if (DriverStation.isDisabled()) {
       runVolts(0.0);
     }
 
     sim.update(RobotConstants.kLooperDt);
-    inputs.data =
-        new RollerSystemIOData(
-            sim.getAngularPositionRad(),
-            sim.getAngularVelocityRadPerSec(),
-            appliedVoltage,
-            sim.getCurrentDrawAmps(),
-            gearbox.getCurrent(sim.getAngularVelocityRadPerSec(), appliedVoltage),
-            0.0,
-            false,
-            true);
+    inputs.data = new RollerSubsystemIOData(
+        sim.getAngularPositionRad(),
+        sim.getAngularVelocityRadPerSec(),
+        appliedVoltage,
+        sim.getCurrentDrawAmps(),
+        gearbox.getCurrent(sim.getAngularVelocityRadPerSec(), appliedVoltage),
+        0.0,
+        false,
+        true);
   }
 
   @Override

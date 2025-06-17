@@ -15,27 +15,31 @@ import lombok.experimental.Accessors;
 
 import org.littletonrobotics.junction.Logger;
 
+import com.team5817.lib.drivers.Subsystem;
 import com.team5817.lib.requests.Request;
 
-public class RollerSystem<S extends Enum<S> & RollerState> {
+public class RollerSubsystem<S extends Enum<S> & IRollerState> extends Subsystem {
   private final String inputsName;
-  private final RollerSystemIO io;
-  protected final RollerSystemIOInputsAutoLogged inputs = new RollerSystemIOInputsAutoLogged();
-  private final Debouncer motorConnectedDebouncer =
-      new Debouncer(0.5, Debouncer.DebounceType.kFalling);
+  private final RollerSubsystemIO io;
+  protected final RollerSubsystemIOInputsAutoLogged inputs = new RollerSubsystemIOInputsAutoLogged();
+  private final Debouncer motorConnectedDebouncer = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
   private final Alert disconnected;
   private final Alert tempFault;
 
   private boolean brakeModeEnabled = true;
 
-  @Getter @Setter @Accessors(prefix = "m") private S mState;
-  public enum RollerControlMode{
+  @Getter
+  @Setter
+  @Accessors(prefix = "m")
+  private S mState;
+
+  public enum RollerControlMode {
     VOLTAGE,
     TORQUE,
     VELOCITY
   }
 
-  public RollerSystem(S initialState, String name, String inputsName, RollerSystemIO io) {
+  public RollerSubsystem(S initialState, String name, String inputsName, RollerSubsystemIO io) {
     this.mState = initialState;
     this.inputsName = name;
     this.io = io;
@@ -44,13 +48,14 @@ public class RollerSystem<S extends Enum<S> & RollerState> {
     tempFault = new Alert(name + " motor too hot! 🥵", Alert.AlertType.kWarning);
   }
 
-  public void readPeriodicInputs(){
+  public void readPeriodicInputs() {
     io.updateInputs(inputs);
     Logger.processInputs(inputsName, inputs);
     disconnected.set(
         !motorConnectedDebouncer.calculate(inputs.data.connected()));
     tempFault.set(inputs.data.tempFault());
   }
+
   public void writePeriodicOutputs() {
     switch (mState.getControlMode()) {
       case TORQUE:
@@ -61,18 +66,19 @@ public class RollerSystem<S extends Enum<S> & RollerState> {
         break;
       case VOLTAGE:
         io.runVolts(mState.getDemand());
-        break;      
+        break;
     }
 
     Logger.recordOutput(inputsName + "/BrakeModeEnabled", brakeModeEnabled);
   }
-  
-  public RollerSystem(S initialState, String name, RollerSystemIO io){
-    this(initialState,name,String.join(name,"Inputs"),io);
+
+  public RollerSubsystem(S initialState, String name, RollerSubsystemIO io) {
+    this(initialState, name, String.join(name, "Inputs"), io);
   }
 
   public void setBrakeMode(boolean enabled) {
-    if (brakeModeEnabled == enabled) return;
+    if (brakeModeEnabled == enabled)
+      return;
     brakeModeEnabled = enabled;
     io.setBrakeMode(enabled);
   }
@@ -85,16 +91,16 @@ public class RollerSystem<S extends Enum<S> & RollerState> {
     return inputs.data.velocityRadsPerSec();
   }
 
-  public Request stateRequest(S newState){
+  public Request stateRequest(S newState) {
     return new Request() {
       @Override
       public void act() {
-       setState(newState);
+        setState(newState);
       }
     };
   }
 
-  public boolean allOK(){
+  public boolean allOK() {
     return !disconnected.get() && !tempFault.get();
   }
 }

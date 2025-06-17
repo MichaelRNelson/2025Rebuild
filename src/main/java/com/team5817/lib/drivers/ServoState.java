@@ -1,9 +1,13 @@
 package com.team5817.lib.drivers;
 
+public interface ServoState {
+  double getDemand();
 
-    public interface ServoState {
-        double getDemand();
-        boolean isDisabled();
-        double getAllowableError();
-        ServoMotorSubsystem.ControlState getControlState();
-    }
+  boolean isDisabled();
+
+  default public double getAllowableError() {
+    return Double.POSITIVE_INFINITY;
+  }
+
+  ServoMotorSubsystem.ControlState getControlState();
+}

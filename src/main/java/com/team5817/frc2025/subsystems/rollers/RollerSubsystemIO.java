@@ -9,13 +9,13 @@ package com.team5817.frc2025.subsystems.rollers;
 
 import org.littletonrobotics.junction.AutoLog;
 
-public interface RollerSystemIO {
+public interface RollerSubsystemIO {
   @AutoLog
-  class RollerSystemIOInputs {
-    public RollerSystemIOData data = new RollerSystemIOData(0, 0, 0, 0, 0, 0, false, false);
+  class RollerSubsystemIOInputs {
+    public RollerSubsystemIOData data = new RollerSubsystemIOData(0, 0, 0, 0, 0, 0, false, false);
   }
 
-  record RollerSystemIOData(
+  record RollerSubsystemIOData(
       double positionRads,
       double velocityRadsPerSec,
       double appliedVoltage,
@@ -23,19 +23,26 @@ public interface RollerSystemIO {
       double torqueCurrentAmps,
       double tempCelsius,
       boolean tempFault,
-      boolean connected) {}
+      boolean connected) {
+  }
 
-  default void updateInputs(RollerSystemIOInputs inputs) {}
+  default void updateInputs(RollerSubsystemIOInputs inputs) {
+  }
 
   /* Run rollers at volts */
-  default void runVolts(double volts) {}
+  default void runVolts(double volts) {
+  }
 
   /* Run rollers at velocity */
-  default void runVelocity(double volts) {}
+  default void runVelocity(double volts) {
+  }
 
-  default void runTorqueCurrent(double amps) {}
+  default void runTorqueCurrent(double amps) {
+  }
 
-  default void setCurrentLimit(double currentLimit) {}
+  default void setCurrentLimit(double currentLimit) {
+  }
 
-  default void setBrakeMode(boolean enabled) {}
+  default void setBrakeMode(boolean enabled) {
+  }
 }

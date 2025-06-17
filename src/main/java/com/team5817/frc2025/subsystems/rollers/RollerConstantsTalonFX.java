@@ -2,7 +2,7 @@ package com.team5817.frc2025.subsystems.rollers;
 
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-public class TalonFXRollerConstants {
+public class RollerConstantsTalonFX {
     public NeutralModeValue kNeutralMode = NeutralModeValue.Brake;
 
     public double kKp = 0; // Raw output / raw error
