@@ -19,22 +19,7 @@ import org.littletonrobotics.junction.Logger;
  */
 public class VisionDeviceManager extends Subsystem {
 
-  /**
-   * Singleton instance of VisionDeviceManager.
-   */
-  public static VisionDeviceManager mInstance;
 
-  /**
-   * Returns the singleton instance of VisionDeviceManager.
-   * 
-   * @return the singleton instance.
-   */
-  public static VisionDeviceManager getInstance() {
-    if (mInstance == null) {
-      mInstance = new VisionDeviceManager();
-    }
-    return mInstance;
-  }
 
   private VisionDevice mRightCamera;
   private VisionDevice mLeftCamera;
@@ -51,9 +36,10 @@ public class VisionDeviceManager extends Subsystem {
    * Constructor for VisionDeviceManager.
    */
   public VisionDeviceManager() {
-    mRightCamera = new VisionDevice("limelight-right");
-    mLeftCamera = new VisionDevice("limelight-left");
-    mUpCamera = new VisionDevice("limelight-up");
+    mRightCamera = new VisionDevice("limelight-right", new VisionDeviceIOLimelight("limelight-right"));
+    mLeftCamera = new VisionDevice("limelight-left", new VisionDeviceIOLimelight("limelight-left"));
+    mUpCamera = new VisionDevice("limelight-up", new VisionDeviceIOLimelight("limelight-up"));
+    
 
     mAllCameras = List.of(mRightCamera, mLeftCamera, mUpCamera);
   }
@@ -140,6 +126,14 @@ public class VisionDeviceManager extends Subsystem {
     }
     return bestDevice;
 
+  }
+
+  // **constructor**
+  public VisionDeviceManager(VisionDevice right, VisionDevice left, VisionDevice up) {
+    mRightCamera = right;
+    mLeftCamera = left;
+    mUpCamera = up;
+    mAllCameras = List.of(mRightCamera, mLeftCamera, mUpCamera);
   }
 
   /**

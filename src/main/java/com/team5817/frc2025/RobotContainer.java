@@ -9,6 +9,9 @@ import com.team5817.frc2025.subsystems.EndEffector.EndEffectorConstants.EndEffec
 import com.team5817.frc2025.subsystems.EndEffector.EndEffectorWrist;
 import com.team5817.frc2025.subsystems.Intake.Intake;
 import com.team5817.frc2025.subsystems.Intake.IntakeConstants;
+import com.team5817.frc2025.subsystems.Vision.VisionDevice;
+import com.team5817.frc2025.subsystems.Vision.VisionDeviceIOLimelight;
+import com.team5817.frc2025.subsystems.Vision.VisionDeviceIOSim;
 import com.team5817.frc2025.subsystems.Vision.VisionDeviceManager;
 import com.team5817.frc2025.subsystems.rollers.RollerSubsystem;
 import com.team5817.frc2025.subsystems.rollers.RollerSubsystemIOSim;
@@ -73,7 +76,14 @@ public class RobotContainer {
     mElevator = new Elevator(
         new ServoMotorIOTalonFX(ElevatorConstants.kElevatorServoConstants));
     mDrive = new Drive();
-    mVision = VisionDeviceManager.getInstance();
+    mVision = new VisionDeviceManager(
+      new VisionDevice("limelight-right", new VisionDeviceIOLimelight("limelight-right")),
+      new VisionDevice("limelight-left", new VisionDeviceIOLimelight("limelight-left")),
+      new VisionDevice("limelight-up", new VisionDeviceIOLimelight("limelight-up"))
+    );
+    
+
+  
   }
 
   public void makeSimulatedRobot() {
@@ -92,6 +102,11 @@ public class RobotContainer {
     mElevator = new Elevator(
         new ServoMotorIOSim(ElevatorConstants.kElevatorServoConstants));
     mDrive = new Drive();
-    mVision = VisionDeviceManager.getInstance();
+
+    mVision = new VisionDeviceManager(
+      new VisionDevice("limelight-right", new VisionDeviceIOSim()),
+      new VisionDevice("limelight-left", new VisionDeviceIOSim()),
+      new VisionDevice("limelight-up", new VisionDeviceIOSim())
+    );
   }
 }
