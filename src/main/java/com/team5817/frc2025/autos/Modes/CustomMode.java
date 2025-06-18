@@ -101,7 +101,7 @@ public class CustomMode extends AutoBase {
   public void routine() {
     s.mElevator.setManualOffset(0.04);
     if (RobotMode.isSim()) {
-      mSim.setSimulationWorldPose(t.initalPose().wpi());
+      d.setPose(t.initalPose());
     }
     s.setReadyToScore(false);
     r(new ParallelAction(List.of(

@@ -5,6 +5,7 @@ import com.team5817.frc2025.RobotState;
 import com.team5817.frc2025.RobotState.VisionUpdate;
 import com.team5817.frc2025.loops.ILooper;
 import com.team5817.frc2025.loops.Loop;
+import com.team5817.frc2025.subsystems.Drive.Drive;
 import com.team5817.lib.RobotMode;
 import com.team5817.lib.drivers.Subsystem;
 import com.team254.lib.geometry.Translation2d;
@@ -24,18 +25,6 @@ public class VisionDeviceManager extends Subsystem {
    */
   public static VisionDeviceManager mInstance;
 
-  /**
-   * Returns the singleton instance of VisionDeviceManager.
-   * 
-   * @return the singleton instance.
-   */
-  public static VisionDeviceManager getInstance() {
-    if (mInstance == null) {
-      mInstance = new VisionDeviceManager();
-    }
-    return mInstance;
-  }
-
   private VisionDevice mRightCamera;
   private VisionDevice mLeftCamera;
   private VisionDevice mUpCamera;
@@ -50,10 +39,10 @@ public class VisionDeviceManager extends Subsystem {
   /**
    * Constructor for VisionDeviceManager.
    */
-  public VisionDeviceManager() {
-    mRightCamera = new VisionDevice("limelight-right");
-    mLeftCamera = new VisionDevice("limelight-left");
-    mUpCamera = new VisionDevice("limelight-up");
+  public VisionDeviceManager(Drive drive) {
+    mRightCamera = new VisionDevice("limelight-right",drive);
+    mLeftCamera = new VisionDevice("limelight-left",drive);
+    mUpCamera = new VisionDevice("limelight-up",drive);
 
     mAllCameras = List.of(mRightCamera, mLeftCamera, mUpCamera);
   }

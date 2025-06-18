@@ -25,17 +25,22 @@ import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 import com.team254.lib.geometry.Pose2d;
 import com.team254.lib.geometry.Rotation2d;
+import com.team254.lib.geometry.Translation2d;
 import com.team254.lib.geometry.Twist2d;
 import com.team254.lib.swerve.ChassisSpeeds;
+import com.team5817.frc2025.field.AlignmentPoint.AlignmentType;
 import com.team5817.frc2025.generated.TunerConstants;
 import com.team5817.lib.RobotMode;
 import com.team5817.lib.RobotMode.Mode;
 import com.team5817.lib.drivers.Subsystem;
+import com.team5817.lib.motion.Trajectory;
+import com.team5817.lib.swerve.DriveMotionPlanner;
 import com.team5817.lib.swerve.GyroIO;
 import com.team5817.lib.swerve.GyroIOInputsAutoLogged;
 import com.team5817.lib.swerve.ModuleIO;
 import com.team5817.lib.swerve.Module;
 import com.team5817.lib.swerve.PhoenixOdometryThread;
+import com.team5817.lib.swerve.SwerveHeadingController;
 
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
@@ -51,7 +56,10 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 public class Drive extends Subsystem {
   // TunerConstants doesn't include these constants, so they are declared locally
@@ -84,6 +92,33 @@ public class Drive extends Subsystem {
           1),
       getModuleTranslations());
 
+  public enum DriveControlState {
+    FORCE_ORIENT,
+    OPEN_LOOP,
+    HEADING_SNAP,
+    VELOCITY,
+    PATH_FOLLOWING,
+    AUTOALIGN
+  }
+  private DriveControlState mControlState = DriveControlState.OPEN_LOOP;
+  private boolean mControlStateHasChanged = false;
+
+  private double alignmentStartTimestamp = 0;
+
+    private final DriveMotionPlanner mMotionPlanner;
+  private final AutoAlignMotionPlanner mAutoAlignMotionPlanner;
+
+  private final SwerveHeadingController mHeadingController;
+  @Setter @Accessors(prefix = "m") private Rotation2d mTrackingAngle = Rotation2d.identity();
+  @Setter @Accessors(prefix = "m") private boolean mOverrideHeading = false;
+
+  @Setter @Accessors(prefix = "m") private static AlignmentType mAlignment = AlignmentType.CORAL_SCORE;
+  @Setter private boolean autoAlignFinishedOverrride = false;
+
+
+
+
+
   public static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
@@ -115,6 +150,11 @@ public class Drive extends Subsystem {
     modules[1] = new Module(frModuleIO, 1, TunerConstants.FrontRight);
     modules[2] = new Module(blModuleIO, 2, TunerConstants.BackLeft);
     modules[3] = new Module(brModuleIO, 3, TunerConstants.BackRight);
+    mMotionPlanner = new DriveMotionPlanner();
+    mAutoAlignMotionPlanner = new AutoAlignMotionPlanner();
+    mHeadingController = new SwerveHeadingController();
+
+    mAutoAlignMotionPlanner.reset();
 
     // Usage reporting for swerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
@@ -133,8 +173,165 @@ public class Drive extends Subsystem {
     // (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
   }
 
+    /**
+   * Sets the control state of the drive system.
+   *
+   * @param newState The new control state to set.
+   */
+  public void setControlState(DriveControlState newState) {
+    if (newState != mControlState) {
+      mControlState = newState;
+      mControlStateHasChanged = true;
+    }
+  }
+
+  public void feedTeleopSetpoint(ChassisSpeeds speeds){
+    runVelocity(getTeleopSetpoint(speeds));
+  }
+  private ChassisSpeeds getTeleopSetpoint(ChassisSpeeds speeds) {
+
+    double omega = mHeadingController.update(getHeading(), Timer.getTimestamp());
+
+    if (mControlState != DriveControlState.HEADING_SNAP
+        && Math.abs(speeds.omegaRadiansPerSecond) > .2) {
+      mHeadingController.setStabilizeTarget(getHeading());
+    }
+
+    if (mControlState == DriveControlState.PATH_FOLLOWING) {
+      if (Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) > SwerveConstants.maxSpeed
+          * 0.1) {
+        // setControlState(DriveControlState.OPEN_LOOP);
+
+      } else {
+        mControlStateHasChanged = false;
+        return new ChassisSpeeds();
+      }
+    }
+    if (mControlState == DriveControlState.AUTOALIGN) {
+      if (mControlStateHasChanged)
+        alignmentStartTimestamp = Timer.getTimestamp();
+      if (Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) > SwerveConstants.maxSpeed
+          * 0.1 && Timer.getTimestamp() - alignmentStartTimestamp > .5) {
+        mControlStateHasChanged = false;
+        return speeds;
+      } else {
+        ChassisSpeeds speed = mAutoAlignMotionPlanner.updateAutoAlign(Timer.getTimestamp(),
+            getPose()
+              .withRotation(getHeading()));
+        if (speed != null) {
+          return speed;
+        }
+        mControlStateHasChanged = false;
+        return new ChassisSpeeds();
+      }
+    }
+
+    if (mControlState == DriveControlState.OPEN_LOOP || mControlState == DriveControlState.HEADING_SNAP) {
+      double x = speeds.vxMetersPerSecond;
+      double y = speeds.vyMetersPerSecond;
+
+      if (Math.abs(speeds.omegaRadiansPerSecond) > .1) {
+        omega = speeds.omegaRadiansPerSecond;
+
+      }
+
+      if (Math.abs(omega) < .05) {
+        omega = 0;
+      }
+      mControlStateHasChanged = false;
+      return new ChassisSpeeds(x, y, omega);
+    } else if (mControlState != DriveControlState.OPEN_LOOP) {
+      setControlState(DriveControlState.OPEN_LOOP);
+    }
+
+    mControlStateHasChanged = false;
+    return speeds;
+  }
+
+  public void autoAlign(AlignmentType type) {
+    setAlignment(type);
+    alignDrive(findTargetPoint());
+  }
+   /**
+   * Initiates auto alignment with the specified alignment type.
+   *
+   * @param type The alignment type.
+   */
+  public Pose2d findTargetPoint() {
+    return AutoAlignPointSelector.chooseTargetPoint(getPose(), mAlignment);
+  }
+
+  private void alignDrive(Pose2d targetPoint) {
+    autoAlignFinishedOverrride = false;
+    if (targetPoint == null) {
+      return;
+    }
+    mAutoAlignMotionPlanner.setTargetPoint(targetPoint, mAlignment.tolerance);
+    if (mControlState != DriveControlState.AUTOALIGN) {
+      mAutoAlignMotionPlanner.reset();
+      setControlState(DriveControlState.AUTOALIGN);
+    }
+  }
+  /**
+   * Sets the trajectory for the motion planner.
+   *
+   * @param trajectory The trajectory to follow.
+   */
+  public void setTrajectory(Trajectory trajectory, double timeout) {
+    mMotionPlanner.reset();
+    mMotionPlanner.setTrajectory(trajectory.get(), timeout);
+    setControlState(DriveControlState.PATH_FOLLOWING);
+  }
+
+  /**
+   * Checks if auto alignment is complete.
+   *
+   * @return True if auto alignment is complete, false otherwise.
+   */
+  public boolean getAutoAlignComplete() {
+    if (autoAlignFinishedOverrride)
+      return true;
+    return mAutoAlignMotionPlanner.getAutoAlignComplete();
+  }
+
+  /**
+   * Checks if auto alignment is complete.
+   *
+   * @return True if auto alignment is complete, false otherwise.
+   */
+  public Translation2d getAutoAlignError() {
+    mAutoAlignMotionPlanner.setTargetPoint(findTargetPoint(), mAlignment.tolerance);
+    mAutoAlignMotionPlanner.updateAutoAlign(Timer.getTimestamp(),
+        getPose()
+            .withRotation(getHeading()));
+    return mAutoAlignMotionPlanner.getAutoAlignError();
+  }
+  /**
+   * Updates the path follower.
+   */
+  public void updatePathFollower() {
+    final double now = Timer.getTimestamp();
+    ChassisSpeeds output = mMotionPlanner.update(now, getPose());
+    if (output != null) {
+      runVelocity(output);
+    }
+  }
+
+  /**
+   * Checks if the trajectory is finished.
+   *
+   * @return True if the trajectory is finished, false otherwise.
+   */
+  public boolean isTrajectoryFinished() {
+    return mMotionPlanner.isPathFinished();
+  }
+
+
   @Override
   public void readPeriodicInputs() {
+    if(mControlState == DriveControlState.PATH_FOLLOWING)
+      updatePathFollower();
+  
     odometryLock.lock(); // Prevents odometry updates while reading data
     gyroIO.updateInputs(gyroInputs);
     Logger.processInputs("Drive/Gyro", gyroInputs);

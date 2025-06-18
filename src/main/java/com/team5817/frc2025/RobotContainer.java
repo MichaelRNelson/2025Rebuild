@@ -1,5 +1,6 @@
 package com.team5817.frc2025;
 
+import com.team5817.frc2025.generated.TunerConstants;
 import com.team5817.frc2025.subsystems.Superstructure;
 import com.team5817.frc2025.subsystems.Drive.Drive;
 import com.team5817.frc2025.subsystems.Elevator.Elevator;
@@ -10,11 +11,19 @@ import com.team5817.frc2025.subsystems.EndEffector.EndEffectorWrist;
 import com.team5817.frc2025.subsystems.Intake.Intake;
 import com.team5817.frc2025.subsystems.Intake.IntakeConstants;
 import com.team5817.frc2025.subsystems.Rollers.RollerSubsystem;
+import com.team5817.frc2025.subsystems.Rollers.RollerSubsystemIO;
 import com.team5817.frc2025.subsystems.Rollers.RollerSubsystemIOSim;
 import com.team5817.frc2025.subsystems.Rollers.RollerSubsystemIOTalonFX;
 import com.team5817.frc2025.subsystems.Vision.VisionDeviceManager;
+import com.team5817.lib.RobotMode;
+import com.team5817.lib.drivers.ServoMotorIO;
 import com.team5817.lib.drivers.ServoMotorIOSim;
 import com.team5817.lib.drivers.ServoMotorIOTalonFX;
+import com.team5817.lib.swerve.GyroIO;
+import com.team5817.lib.swerve.GyroIOPigeon2;
+import com.team5817.lib.swerve.ModuleIO;
+import com.team5817.lib.swerve.ModuleIOSim;
+import com.team5817.lib.swerve.ModuleIOTalonFX;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 
@@ -28,10 +37,21 @@ public class RobotContainer {
   public Superstructure mSuperstructure;
 
   public RobotContainer() {
-    if (Robot.isReal())
-      makeRealRobot();
-    else
+    switch (RobotMode.mode) {
+      case REAL:
+        makeRealRobot();
+        break;
+      case REPLAY:
+        makeEmptyRobot();
+        break;
+      case SIM:
       makeSimulatedRobot();
+        break;
+      default:
+      makeEmptyRobot();
+        break;
+      
+    }
 
     SubsystemManager mSubsystemManager = SubsystemManager.getInstance();
 
@@ -72,8 +92,14 @@ public class RobotContainer {
         new ServoMotorIOTalonFX(ElevatorConstants.kElevatorServoConstants));
     mElevator = new Elevator(
         new ServoMotorIOTalonFX(ElevatorConstants.kElevatorServoConstants));
-    mDrive = new Drive();
-    mVision = VisionDeviceManager.getInstance();
+    mDrive = new Drive(
+      new GyroIOPigeon2(),
+      new ModuleIOTalonFX(TunerConstants.FrontLeft),
+      new ModuleIOTalonFX(TunerConstants.FrontRight),
+      new ModuleIOTalonFX(TunerConstants.BackLeft),
+      new ModuleIOTalonFX(TunerConstants.BackRight)
+    );
+    mVision = new VisionDeviceManager(mDrive);
   }
 
   public void makeSimulatedRobot() {
@@ -91,7 +117,36 @@ public class RobotContainer {
         new ServoMotorIOSim(IntakeConstants.DeployConstants.kDeployServoConstants));
     mElevator = new Elevator(
         new ServoMotorIOSim(ElevatorConstants.kElevatorServoConstants));
-    mDrive = new Drive();
-    mVision = VisionDeviceManager.getInstance();
+    mDrive = new Drive(
+      new GyroIO() {},
+      new ModuleIOSim(TunerConstants.FrontLeft),
+      new ModuleIOSim(TunerConstants.FrontRight),
+      new ModuleIOSim(TunerConstants.BackLeft),
+      new ModuleIOSim(TunerConstants.BackRight)
+    );
+    mVision = new VisionDeviceManager(mDrive);
+  }
+  public void makeEmptyRobot(){
+    mEndEffectorWrist = new EndEffectorWrist(
+        new ServoMotorIO(){});
+    mEndEffectorRollers = new RollerSubsystem<EndEffectorConstants.RollerState>(
+        EndEffectorConstants.RollerState.IDLE,
+        "EndEffectorRollers",
+        new RollerSubsystemIO(){});
+
+    mIntake = new Intake(
+        new RollerSubsystemIO(){},
+        new RollerSubsystemIO(){},
+        new RollerSubsystemIO(){},
+        new ServoMotorIO(){});
+    mElevator = new Elevator(new ServoMotorIO(){});
+    mDrive = new Drive(
+      new GyroIO() {},
+      new ModuleIO() {},
+      new ModuleIO() {},
+      new ModuleIO() {},
+      new ModuleIO() {}
+    );
+    mVision = new VisionDeviceManager(mDrive);
   }
 }

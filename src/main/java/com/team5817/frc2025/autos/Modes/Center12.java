@@ -76,7 +76,7 @@ public class Center12 extends AutoBase {
   @Override
   public void routine() {
     if (RobotMode.isSim()) {
-      mSim.setSimulationWorldPose(t.initalPose().wpi());
+      d.setPose(t.initalPose());
     }
     s.setReadyToScore(false);
     r(new ParallelAction(List.of(

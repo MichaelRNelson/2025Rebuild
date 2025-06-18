@@ -1,8 +1,8 @@
 package com.team5817.frc2025.subsystems.Vision;
 
 import com.team5817.frc2025.RobotState.VisionUpdate;
+import com.team5817.frc2025.subsystems.Drive.Drive;
 import com.team5817.frc2025.subsystems.Vision.LimelightHelpers.PoseEstimate;
-import com.team5817.lib.drivers.Pigeon;
 import com.team254.lib.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.networktables.NetworkTable;
@@ -21,17 +21,16 @@ public class VisionDevice {
 
 	public String mName;
 	private NetworkTable mOutputTable;
-
+	private Drive drive;
 	/**
 	 * Constructor for VisionDevice.
 	 *
 	 * @param name the name of the vision device
 	 */
-	public VisionDevice(String name) {
+	public VisionDevice(String name, Drive drive) {
 		this.mName = name;
 		mOutputTable = NetworkTableInstance.getDefault().getTable(name);
-
-
+		this.drive = drive;
 	}
 
 	/**
@@ -64,7 +63,7 @@ public class VisionDevice {
 		} else {
 			this.visionUpdate = Optional.empty();
 		}
-		LimelightHelpers.SetRobotOrientation(mName, Pigeon.getInstance().getYaw().getDegrees(), 0, 0, 0, 0, 0);
+		LimelightHelpers.SetRobotOrientation(mName, drive.getHeading().getDegrees(), 0, 0, 0, 0, 0);
 		Logger.recordOutput(mName+"/mt1", mPeriodicIO.mt1Pose.wpi());
 	}
 

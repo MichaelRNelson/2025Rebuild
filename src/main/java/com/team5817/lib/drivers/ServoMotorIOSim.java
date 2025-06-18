@@ -1,7 +1,5 @@
 package com.team5817.lib.drivers;
 
-import org.littletonrobotics.junction.Logger;
-
 import com.team5817.lib.drivers.ServoMotorSubsystem.ControlState;
 
 import edu.wpi.first.wpilibj.Timer;
