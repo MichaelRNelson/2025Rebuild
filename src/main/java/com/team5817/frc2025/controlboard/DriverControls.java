@@ -166,10 +166,4 @@ public class DriverControls {
     return d.getPose().getTranslation().translateBy(FieldLayout.getReefPose().inverse().getTranslation())
         .norm() > 1.4;
   }
-
-  public void testMode() {
-    if (driver.getAButton())
-      s.mDrive.snapHeading(driver.getPOVDirection());
-  }
-
 }

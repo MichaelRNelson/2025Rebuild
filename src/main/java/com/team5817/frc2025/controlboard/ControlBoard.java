@@ -69,7 +69,7 @@ public class ControlBoard {
       double scaled_x = Util.scaledDeadband(expoForwardAxis, 1.0, Math.abs(deadband_vector.x()));
       double scaled_y = Util.scaledDeadband(expoStrafeAxis, 1.0, Math.abs(deadband_vector.y()));
       return new Translation2d(scaled_x, scaled_y)
-          .scale(d.getKinematicLimits().kMaxDriveVelocity);
+          .scale(d.getMaxLinearSpeedMetersPerSec());
     }
   }
 

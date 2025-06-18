@@ -18,10 +18,11 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.team254.lib.geometry.Rotation2d;
 import com.team5817.frc2025.generated.TunerConstants;
 import com.team5817.frc2025.subsystems.Drive.Drive;
+import com.team5817.lib.util.PhoenixUtil;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -29,10 +30,9 @@ import java.util.Queue;
 
 /** IO implementation for Pigeon 2. */
 public class GyroIOPigeon2 implements GyroIO {
-  private final Pigeon2 pigeon =
-      new Pigeon2(
-          TunerConstants.DrivetrainConstants.Pigeon2Id,
-          TunerConstants.DrivetrainConstants.CANBusName);
+  private final Pigeon2 pigeon = new Pigeon2(
+      TunerConstants.DrivetrainConstants.Pigeon2Id,
+      TunerConstants.DrivetrainConstants.CANBusName);
   private final StatusSignal<Angle> yaw = pigeon.getYaw();
   private final Queue<Double> yawPositionQueue;
   private final Queue<Double> yawTimestampQueue;
@@ -46,6 +46,7 @@ public class GyroIOPigeon2 implements GyroIO {
     pigeon.optimizeBusUtilization();
     yawTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
     yawPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(pigeon.getYaw());
+    PhoenixUtil.tryUntilOk(5, () -> pigeon.setYaw(0.0, 0.25));
   }
 
   @Override
@@ -54,13 +55,16 @@ public class GyroIOPigeon2 implements GyroIO {
     inputs.yawPosition = Rotation2d.fromDegrees(yaw.getValueAsDouble());
     inputs.yawVelocityRadPerSec = Units.degreesToRadians(yawVelocity.getValueAsDouble());
 
-    inputs.odometryYawTimestamps =
-        yawTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
-    inputs.odometryYawPositions =
-        yawPositionQueue.stream()
-            .map((Double value) -> Rotation2d.fromDegrees(value))
-            .toArray(Rotation2d[]::new);
+    inputs.odometryYawTimestamps = yawTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+    inputs.odometryYawPositions = yawPositionQueue.stream()
+        .map((Double value) -> Rotation2d.fromDegrees(value))
+        .toArray(Rotation2d[]::new);
     yawTimestampQueue.clear();
     yawPositionQueue.clear();
+  }
+
+  @Override
+  public void resetYaw(Rotation2d newYaw) {
+    PhoenixUtil.tryUntilOk(5, () -> pigeon.setYaw(newYaw.getDegrees(), 0.25));
   }
 }

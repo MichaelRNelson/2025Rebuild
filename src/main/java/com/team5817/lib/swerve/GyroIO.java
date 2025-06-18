@@ -13,8 +13,9 @@
 
 package com.team5817.lib.swerve;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
+
+import com.team254.lib.geometry.Rotation2d;
 
 public interface GyroIO {
   @AutoLog
@@ -26,5 +27,9 @@ public interface GyroIO {
     public Rotation2d[] odometryYawPositions = new Rotation2d[] {};
   }
 
-  public default void updateInputs(GyroIOInputs inputs) {}
+  public default void updateInputs(GyroIOInputs inputs) {
+  }
+
+  public default void resetYaw(Rotation2d newYaw) {
+  }
 }
