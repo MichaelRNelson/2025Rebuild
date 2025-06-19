@@ -3,9 +3,9 @@ package com.team5817.frc2025.subsystems.EndEffector;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.team5817.frc2025.Ports;
-import com.team5817.frc2025.subsystems.rollers.IRollerState;
-import com.team5817.frc2025.subsystems.rollers.RollerConstantsTalonFX;
-import com.team5817.frc2025.subsystems.rollers.RollerSubsystem.RollerControlMode;
+import com.team5817.frc2025.subsystems.Rollers.IRollerState;
+import com.team5817.frc2025.subsystems.Rollers.RollerConstantsTalonFX;
+import com.team5817.frc2025.subsystems.Rollers.RollerSubsystem.RollerControlMode;
 import com.team5817.lib.drivers.ServoConstants;
 
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;

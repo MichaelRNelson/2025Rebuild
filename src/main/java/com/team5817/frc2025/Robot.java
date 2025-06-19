@@ -5,8 +5,6 @@
 package com.team5817.frc2025;
 
 import java.util.Optional;
-import org.ironmaple.simulation.SimulatedArena;
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 
@@ -15,8 +13,6 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
-import com.team254.lib.geometry.Pose2d;
-import com.team254.lib.geometry.Rotation2d;
 import com.team254.lib.swerve.ChassisSpeeds;
 import com.team5817.BuildConstants;
 import com.team5817.frc2025.autos.AutoBase;
@@ -27,12 +23,7 @@ import com.team5817.frc2025.autos.TrajectoryLibrary.l;
 import com.team5817.frc2025.controlboard.ControlBoard;
 import com.team5817.frc2025.controlboard.DriverControls;
 import com.team5817.frc2025.loops.Looper;
-import com.team5817.frc2025.subsystems.Superstructure;
 import com.team5817.frc2025.subsystems.Drive.Drive;
-import com.team5817.frc2025.subsystems.Elevator.Elevator;
-import com.team5817.frc2025.subsystems.EndEffector.EndEffectorWrist;
-import com.team5817.frc2025.subsystems.Intake.Intake;
-import com.team5817.frc2025.subsystems.Vision.VisionDeviceManager;
 import com.team5817.lib.Elastic;
 import com.team5817.lib.Util;
 import com.team5817.lib.RobotMode;
@@ -58,7 +49,6 @@ public class Robot extends LoggedRobot {
   ControlBoard controlBoard;
   private final Looper mEnabledLooper = new Looper();
 
-  SwerveDriveSimulation mDriveSim;
   Drive mDrive;
 
   @SuppressWarnings("resource")
@@ -98,9 +88,6 @@ public class Robot extends LoggedRobot {
                                                                                               // log
         setUseTiming(false);
       } else {
-        mDriveSim = new SwerveDriveSimulation(Drive.mapleSimConfig, new Pose2d(13, 3, Rotation2d.identity()).wpi());
-        Drive.registerDriveSimulation(mDriveSim);
-        SimulatedArena.getInstance().addDriveTrainSimulation(mDriveSim);
         Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
         new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
       }
@@ -172,9 +159,7 @@ public class Robot extends LoggedRobot {
     mDrive.setControlState(Drive.DriveControlState.OPEN_LOOP);
 
     Elastic.selectTab("Teleoperated");
-    mDrive.resetModulesToAbsolute();
-    mDrive.feedTeleopSetpoint(new ChassisSpeeds());
-    mDrive.setOpenLoop(new ChassisSpeeds());
+    mDrive.stop();
   }
 
   /**
@@ -185,7 +170,7 @@ public class Robot extends LoggedRobot {
     controls.twoControllerMode();
     controlBoard.update();
 
-    mDrive.feedTeleopSetpoint(ChassisSpeeds.fromFieldRelativeSpeeds(
+    mDrive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(
         controlBoard.getSwerveTranslation().x(),
         controlBoard.getSwerveTranslation().y(),
         controlBoard.getSwerveRotation(),
@@ -217,8 +202,6 @@ public class Robot extends LoggedRobot {
     mAutoModeSelector.updateModeCreator();
     Optional<AutoBase> autoMode = mAutoModeSelector.getAutoMode();
     if (autoMode.isPresent() && (autoMode.get() != mAutoExecuter.getAuto())) {
-      if (RobotMode.isSim())
-        autoMode.get().registerDriveSimulation(mDriveSim);
       mAutoExecuter.setAuto(autoMode.get());
     }
   }
@@ -248,8 +231,6 @@ public class Robot extends LoggedRobot {
    */
   @Override
   public void simulationInit() {
-    if (RobotMode.isSim())
-      SimulatedArena.getInstance().resetFieldForAuto();
   }
 
   /**
@@ -257,13 +238,5 @@ public class Robot extends LoggedRobot {
    */
   @Override
   public void simulationPeriodic() {
-    if (RobotMode.isSim()) {
-      SimulatedArena.getInstance().simulationPeriodic();
-      Logger.recordOutput("FieldSimulation/RobotPosition", mDriveSim.getSimulatedDriveTrainPose());
-      Logger.recordOutput(
-          "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
-      Logger.recordOutput(
-          "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
-    }
   }
 }

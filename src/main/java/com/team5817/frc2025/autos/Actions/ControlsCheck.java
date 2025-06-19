@@ -65,7 +65,7 @@ public class ControlsCheck implements Action {
     controlBoard.update();
     controls.twoControllerMode();
 
-    d.feedTeleopSetpoint(ChassisSpeeds.fromFieldRelativeSpeeds(
+    d.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(
         controlBoard.getSwerveTranslation().x(),
         controlBoard.getSwerveTranslation().y(),
         controlBoard.getSwerveRotation(),

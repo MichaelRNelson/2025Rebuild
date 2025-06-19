@@ -27,7 +27,7 @@ public interface ServoMotorIO {
     public double rotor_position;
   }
 
-  public ServoConstants getConstants();
+  default public ServoConstants getConstants() {return new ServoConstants();}
 
   default public void updateInputs(ServoMotorIOInputs inputs) {
   }

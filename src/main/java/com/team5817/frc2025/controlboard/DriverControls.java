@@ -73,16 +73,14 @@ public class DriverControls {
     }
     if (driver.leftTrigger.isBeingPressed()) {
       s.setGoal(preparedGoal);
-      s.mDrive.setDriverKinematicLimits(com.team5817.frc2025.subsystems.Drive.SwerveConstants.kSwerveKinematicLimits);
 
     } else
-      s.mDrive.setDriverKinematicLimits(com.team5817.frc2025.subsystems.Drive.SwerveConstants.kSwerveKinematicLimits);
 
     if (driver.rightTrigger.isBeingPressed() && !driver.POV270.isBeingPressed() && !driver.POV90.isBeingPressed()) {
       if (s.getGoalState().goal.mAlignmentType != AlignmentType.NONE)
         d.autoAlign(s.getGoalState().goal.mAlignmentType);
       else
-        d.autoAlignFinishedOverrride(true);
+        d.setAutoAlignFinishedOverrride(true);
     }
     if (driver.POV270.isBeingPressed())
       d.autoAlign(AlignmentType.CORAL_SCORE_LEFT);
@@ -166,10 +164,4 @@ public class DriverControls {
     return d.getPose().getTranslation().translateBy(FieldLayout.getReefPose().inverse().getTranslation())
         .norm() > 1.4;
   }
-
-  public void testMode() {
-    if (driver.getAButton())
-      s.mDrive.snapHeading(driver.getPOVDirection());
-  }
-
 }
