@@ -19,6 +19,9 @@ public interface VisionDeviceIO {
       public Pose3d targetToCamera = new Pose3d();
     }
   
-    void updateInputs(VisionDeviceIOInputs inputs);
+    default void updateInputs(VisionDeviceIOInputs inputs){
+
+      
+    }
   }
   

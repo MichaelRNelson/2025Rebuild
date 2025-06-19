@@ -36,6 +36,7 @@ public class VisionDevice {
       );
       visionUpdate = Optional.of(update);
 
+
       Logger.recordOutput(name + "/ID", inputs.tagId);
     } else {
       visionUpdate = Optional.empty();
@@ -47,7 +48,6 @@ public class VisionDevice {
   public Optional<VisionUpdate> getVisionUpdate() {
     return visionUpdate;
   }
-
 
 	/**
 	 * Outputs telemetry data.

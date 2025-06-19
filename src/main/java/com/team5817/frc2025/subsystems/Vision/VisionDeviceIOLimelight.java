@@ -2,8 +2,8 @@ package com.team5817.frc2025.subsystems.Vision;
 
 
 import com.team254.lib.geometry.Pose2d;
+import com.team5817.frc2025.subsystems.Drive.Drive;
 import com.team5817.frc2025.subsystems.Vision.LimelightHelpers.PoseEstimate;
-import com.team5817.lib.drivers.Pigeon;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
@@ -11,10 +11,11 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 public class VisionDeviceIOLimelight implements VisionDeviceIO{
     private final String name; 
     private final NetworkTable limelightTable;
+    private Drive mDrive;
 
-
-    public VisionDeviceIOLimelight(String name) {
+    public VisionDeviceIOLimelight(String name, Drive drive) {
         this.name = name;
+        this.mDrive = drive;
         this.limelightTable = NetworkTableInstance.getDefault().getTable(name);
       }
 
@@ -35,7 +36,7 @@ public class VisionDeviceIOLimelight implements VisionDeviceIO{
           inputs.mt1Pose = new Pose2d(LimelightHelpers.getBotPose2d_wpiBlue(name));
           inputs.targetToCamera = LimelightHelpers.getTargetPose3d_CameraSpace(name);
         }
-        LimelightHelpers.SetRobotOrientation(name, Pigeon.getInstance().getYaw().getDegrees(), 0, 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation(name, mDrive.getHeading().getDegrees(), 0, 0, 0, 0, 0);
     
 }
 }
